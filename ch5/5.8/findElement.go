@@ -77,11 +77,6 @@ func GetElementByIDWrapper(input io.Reader, id string) *html.Node {
 	return match
 }
 
-//!+forEachNode
-// forEachNode calls the functions pre(x) and post(x) for each node
-// x in the tree rooted at n. Both functions are optional.
-// pre is called before the children are visited (preorder) and
-// post is called after (postorder).
 func forEachNode(n *html.Node, id string, pre, post func(n *html.Node, id string) bool) *html.Node {
 	if n == nil {
 		return nil
@@ -102,11 +97,6 @@ func forEachNode(n *html.Node, id string, pre, post func(n *html.Node, id string
 	}
 	return m
 }
-
-//!-forEachNode
-
-//!+startend
-var depth int
 
 func startElement(n *html.Node, id string) bool {
 	if n.Type == html.ElementNode {
@@ -139,5 +129,3 @@ func endElement(n *html.Node, id string) bool {
 func printf(format string, a ...interface{}) {
 	fmt.Fprintf(out, format, a...)
 }
-
-//!-startend
