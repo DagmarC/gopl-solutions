@@ -12,7 +12,7 @@ import (
 )
 
 //!+6.5
-const uintSize = 32 << (^uint(0) >> 63) // uint type, which is the most efficient unsigned integer type for the platform
+const UintSize = 32 << (^uint(0) >> 63) // uint type, which is the most efficient unsigned integer type for the platform
 //!-6.5
 
 //!+intset
@@ -24,13 +24,13 @@ type IntSet struct {
 
 // Has reports whether the set contains the non-negative value x.
 func (s *IntSet) Has(x int) bool {
-	word, bit := x/uintSize, uint(x%uintSize)
+	word, bit := x/UintSize, uint(x%UintSize)
 	return word < len(s.words) && s.words[word]&(1<<bit) != 0
 }
 
 // Add adds the non-negative value x to the set.
 func (s *IntSet) Add(x int) {
-	word, bit := x/uintSize, uint(x%uintSize)
+	word, bit := x/UintSize, uint(x%UintSize)
 	for word >= len(s.words) {
 		s.words = append(s.words, 0)
 	}
@@ -58,7 +58,7 @@ func (s *IntSet) Len() int {
 		if word == 0 {
 			continue
 		}
-		for j := 0; j < uintSize; j++ {
+		for j := 0; j < UintSize; j++ {
 			if word&(1<<uint(j)) != 0 {
 				count++
 			}
@@ -69,7 +69,7 @@ func (s *IntSet) Len() int {
 
 // Remove removes x from the set
 func (s *IntSet) Remove(x int) {
-	word, bit := x/uintSize, uint(x%uintSize)
+	word, bit := x/UintSize, uint(x%UintSize)
 
 	for word >= len(s.words) {
 		return // Not present
@@ -147,9 +147,9 @@ func (s *IntSet) Elems() []int {
 		if word == 0 {
 			continue
 		}
-		for j := 0; j < uintSize; j++ {
+		for j := 0; j < UintSize; j++ {
 			if word&(1<<uint(j)) != 0 {
-				elems = append(elems, uintSize*i+j)
+				elems = append(elems, UintSize*i+j)
 			}
 		}
 	}
@@ -167,12 +167,12 @@ func (s *IntSet) String() string {
 		if word == 0 {
 			continue
 		}
-		for j := 0; j <uintSize; j++ {
+		for j := 0; j <UintSize; j++ {
 			if word&(1<<uint(j)) != 0 {
 				if buf.Len() > len("{") {
 					buf.WriteByte(' ')
 				}
-				fmt.Fprintf(&buf, "%d", uintSize*i+j)
+				fmt.Fprintf(&buf, "%d", UintSize*i+j)
 			}
 		}
 	}
