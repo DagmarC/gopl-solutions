@@ -53,71 +53,94 @@ func Example_two() {
 }
 
 type TestValues struct {
-	has  IntSet
-	want int
+	set IntSet
+	len int
 }
 
-var testCases = []TestValues{
-	{has: IntSet{words: []uint64{1}}, want: 1},        // representation of words: [...0000 0001,] means only one element {0} (64*i+j)[i=0, j=0], where i is the words index in []uint64 slice and j is the index inside uint64 word
-	{has: IntSet{words: []uint64{16, 1, 2}}, want: 3}, // representation of words: [...0001 0000, ...0000 0001,...0000 0010] -> {4, 64 (64*i+j)[i=1, j=0], 129(64*i+j)[i=]}
+// var testCases = []TestValues{
+// 	{set: IntSet{words: []uint64{1}}, len: 1},        // representation of words: [...0000 0001,] means only one element {0} (64*i+j)[i=0, j=0], where i is the words index in []uint64 slice and j is the index inside uint64 word
+// 	{set: IntSet{words: []uint64{16, 1, 2}}, len: 3}, // representation of words: [...0001 0000, ...0000 0001,...0000 0010] -> {4, 64 (64*i+j)[i=1, j=0], 129(64*i+j)[i=]}
+// }
+
+func InitTestCases() []TestValues {
+	var x, y IntSet
+
+	x.Add(0)
+
+	y.Add(4)
+	y.Add(64)
+	y.Add(129)
+
+	return []TestValues{
+		{set: x, len: 1},
+		{set: y, len: 3},
+	}
 }
 
 func TestLen(t *testing.T) {
-
+	testCases := InitTestCases()
 	for _, tc := range testCases {
-		fmt.Println(tc.has.Len(), tc.has.String())
-		if tc.has.Len() != tc.want {
+		fmt.Println(tc.set.Len(), tc.set.String())
+		if tc.set.Len() != tc.len {
 			t.Fail()
 		}
 	}
 }
 
 func TestRemove(t *testing.T) {
-
+	testCases := InitTestCases()
 	for _, tc := range testCases {
-		tc.has.Remove(4)
-		if tc.has.Has(4) {
+		tc.set.Remove(4)
+		if tc.set.Has(4) {
 			t.FailNow()
 		}
 	}
 }
 
 func TestClear(t *testing.T) {
+	testCases := InitTestCases()
+
 	for _, tc := range testCases {
-		tc.has.Clear()
-		for _, w := range tc.has.words {
+		tc.set.Clear()
+		for _, w := range tc.set.words {
 			if w != 0 {
 				t.Fail()
 			}
 		}
 	}
+
 }
 
 func TestCopy(t *testing.T) {
+	testCases := InitTestCases()
+
 	for _, tc := range testCases {
-		cp := tc.has.Copy()
-		fmt.Println(tc.has.String(), cp) // Note that tc.has is not a pointer but String() method is defined on the pointer receiver *IntSet and that is why we need to either pass String() method explicitely that will make the conversion automatically or pass the pointer type as cp.
-		if tc.has.String() != cp.String() {
+		cp := tc.set.Copy()
+		// fmt.Println("TEST COPY", tc.set.String(), cp) // Note that tc.has is not a pointer but String() method is defined on the pointer receiver *IntSet and that is why we need to either pass String() method explicitely that will make the conversion automatically or pass the pointer type as cp.
+		if tc.set.String() != cp.String() {
 			t.FailNow()
 		}
 	}
 }
 
 func TestAddAll(t *testing.T) {
-	expected := "{0 1 2 3}"
+	testCases := InitTestCases()
 
-	testCases[0].has.AddAll(1, 2, 3)
-	if testCases[0].has.String() != expected {
+	expected := "{0 1 2 3}"
+	testCases[0].set.AddAll(1, 2, 3)
+	if testCases[0].set.String() != expected {
+		t.Log("expected and actual", expected, testCases[0].set.String())
 		t.Fail()
 	}
 }
 
 func TestIntersectsWith(t *testing.T) {
+	testCases := InitTestCases()
 
 	expected := "{}"
 
-	t1 := testCases[0].has
-	t2 := testCases[1].has
+	t1 := testCases[0].set
+	t2 := testCases[1].set
 
 	t1.IntersectsWith(&t2)
 	if t1.String() != expected {
@@ -130,53 +153,57 @@ func TestIntersectsWith(t *testing.T) {
 
 	t2.IntersectsWith(&t3)
 	if t2.String() != expected {
+		t.Log("expected and actual", expected, t2.String())
 		t.Fail()
 	}
 }
 
 func TestDifferenceWith(t *testing.T) {
+	testCases := InitTestCases()
+
 	expected := "{129}"
 
-	t1 := testCases[1].has
+	t1 := testCases[1].set
 	var t3 IntSet
 	t3.AddAll(4, 64)
 
 	t1.DifferenceWith(&t3)
-	fmt.Println(t1.String())
 	if t1.String() != expected {
 		t.Fail()
 	}
 }
 
 func TestSymmetricDifference(t *testing.T) {
+	testCases := InitTestCases()
+
 	expected := "{4 32 33 129 233 431}"
 
-	t1 := testCases[1].has
+	t1 := testCases[1].set
 	var t3 IntSet
 	t3.AddAll(64, 32, 33, 233, 431)
 
 	t1.SymmetricDifference(&t3)
-	fmt.Println(t1.String())
 	if t1.String() != expected {
 		t.Fail()
 	}
 
 	expected = "{}"
-	t4 := testCases[0].has
+	t4 := testCases[0].set
 
 	var t5 IntSet
 	t5.AddAll(0)
 
 	t4.SymmetricDifference(&t5)
-	fmt.Println(t4.String())
 	if t4.String() != expected {
 		t.Fail()
 	}
 }
 
 func TestElems(t *testing.T) {
+	testCases := InitTestCases()
+
 	expected := []int{4, 64, 129}
-	for i, el := range testCases[1].has.Elems() {
+	for i, el := range testCases[1].set.Elems() {
 		if el != expected[i] {
 			t.Fail()
 		}

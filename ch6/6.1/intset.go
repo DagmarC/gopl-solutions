@@ -11,6 +11,10 @@ import (
 	"fmt"
 )
 
+//!+6.5
+const uintSize = 32 << (^uint(0) >> 63) // uint type, which is the most efficient unsigned integer type for the platform
+//!-6.5
+
 //!+intset
 // An IntSet is a set of small non-negative integers.
 // Its zero value represents the empty set.
@@ -20,13 +24,13 @@ type IntSet struct {
 
 // Has reports whether the set contains the non-negative value x.
 func (s *IntSet) Has(x int) bool {
-	word, bit := x/64, uint(x%64)
+	word, bit := x/uintSize, uint(x%uintSize)
 	return word < len(s.words) && s.words[word]&(1<<bit) != 0
 }
 
 // Add adds the non-negative value x to the set.
 func (s *IntSet) Add(x int) {
-	word, bit := x/64, uint(x%64)
+	word, bit := x/uintSize, uint(x%uintSize)
 	for word >= len(s.words) {
 		s.words = append(s.words, 0)
 	}
@@ -54,7 +58,7 @@ func (s *IntSet) Len() int {
 		if word == 0 {
 			continue
 		}
-		for j := 0; j < 64; j++ {
+		for j := 0; j < uintSize; j++ {
 			if word&(1<<uint(j)) != 0 {
 				count++
 			}
@@ -65,7 +69,7 @@ func (s *IntSet) Len() int {
 
 // Remove removes x from the set
 func (s *IntSet) Remove(x int) {
-	word, bit := x/64, uint(x%64)
+	word, bit := x/uintSize, uint(x%uintSize)
 
 	for word >= len(s.words) {
 		return // Not present
@@ -96,6 +100,7 @@ func (s *IntSet) AddAll(x ...int) {
 	for _, xx := range x {
 		s.Add(xx)
 	}
+
 }
 
 //!-6.2
@@ -128,8 +133,7 @@ func (s *IntSet) SymmetricDifference(t *IntSet) {
 		if i < len(s.words) {
 			s.words[i] = (s.words[i] | tword) & ^(s.words[i] & tword)
 		} else {
-			s.words = append(s.words, t.words[i:]...)
-			break
+			s.words = append(s.words, tword)
 		}
 	}
 }
@@ -143,9 +147,9 @@ func (s *IntSet) Elems() []int {
 		if word == 0 {
 			continue
 		}
-		for j := 0; j < 64; j++ {
+		for j := 0; j < uintSize; j++ {
 			if word&(1<<uint(j)) != 0 {
-				elems = append(elems, 64*i+j)
+				elems = append(elems, uintSize*i+j)
 			}
 		}
 	}
@@ -163,12 +167,12 @@ func (s *IntSet) String() string {
 		if word == 0 {
 			continue
 		}
-		for j := 0; j < 64; j++ {
+		for j := 0; j <uintSize; j++ {
 			if word&(1<<uint(j)) != 0 {
 				if buf.Len() > len("{") {
 					buf.WriteByte(' ')
 				}
-				fmt.Fprintf(&buf, "%d", 64*i+j)
+				fmt.Fprintf(&buf, "%d", uintSize*i+j)
 			}
 		}
 	}
@@ -183,17 +187,13 @@ func main() {
 	x.Add(1)
 	x.Add(144)
 	x.Add(9)
-	fmt.Println(x.String()) // "{1 9 144}"
 
 	y.Add(9)
 	y.Add(42)
-	fmt.Println(y.String(), y.Len()) // "{9 42}"
 
 	x.UnionWith(&y)
-	x.Remove(144)
-	fmt.Println(x.String())                    // "{1 9 42}"
-	fmt.Println(x.Has(9), x.Has(123), x.Len()) // "true false"
 
-	fmt.Println("Elements", x.Elems(), y.Elems(), x.Len(), y.Len())
+	x.SymmetricDifference(&y)
+	fmt.Println(x.String())
 
 }
