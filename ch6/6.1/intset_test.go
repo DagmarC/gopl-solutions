@@ -173,3 +173,12 @@ func TestSymmetricDifference(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestElems(t *testing.T) {
+	expected := []int{4, 64, 129}
+	for i, el := range testCases[1].has.Elems() {
+		if el != expected[i] {
+			t.Fail()
+		}
+	}
+}

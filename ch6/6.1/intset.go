@@ -136,6 +136,24 @@ func (s *IntSet) SymmetricDifference(t *IntSet) {
 
 //!-6.3
 
+//!+6.4
+func (s *IntSet) Elems() []int {
+	elems := make([]int, 0, s.Len())
+	for i, word := range s.words {
+		if word == 0 {
+			continue
+		}
+		for j := 0; j < 64; j++ {
+			if word&(1<<uint(j)) != 0 {
+				elems = append(elems, 64*i+j)
+			}
+		}
+	}
+	return elems
+}
+
+//!-6.4
+
 //!+string
 // String returns the set as a string of the form "{1 2 3}".
 func (s *IntSet) String() string {
@@ -175,5 +193,7 @@ func main() {
 	x.Remove(144)
 	fmt.Println(x.String())                    // "{1 9 42}"
 	fmt.Println(x.Has(9), x.Has(123), x.Len()) // "true false"
+
+	fmt.Println("Elements", x.Elems(), y.Elems(), x.Len(), y.Len())
 
 }
