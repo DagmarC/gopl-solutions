@@ -56,15 +56,6 @@ func add(t *tree, value int) *tree {
 //!-
 
 //!+7.3
-func (t *tree) String1() {
-	if t == nil {
-		return
-	}
-	t.left.String()
-	fmt.Println(t.value)
-	t.right.String()
-}
-
 func (t *tree) String() string {
 	var buf bytes.Buffer
 	values := appendValues([]int{}, t)
