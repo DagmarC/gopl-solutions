@@ -1,4 +1,4 @@
-package main
+package mappings
 
 import (
 	"fmt"
@@ -14,15 +14,15 @@ func main() {
 		os.Exit(1)
 	}
 	elements := make(map[string]int, 50)
-	outline(elements, doc)
+	Outline(elements, doc)
 	fmt.Println(elements)
 }
 
-func outline(elements map[string]int, n *html.Node) {
+func Outline(elements map[string]int, n *html.Node) {
 	if n.Type == html.ElementNode {
 		elements[n.Data]++
 	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		outline(elements, c)
+		Outline(elements, c)
 	}
 }
