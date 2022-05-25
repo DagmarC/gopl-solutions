@@ -14,10 +14,13 @@ type SimpleHtmlReader struct {
 	s string
 }
 
-// Read implements the io.Reader interface. It reads all input at once and when it is done it signals io.EOF.
+// Read implements the io.Reader interface.
 func (r *SimpleHtmlReader) Read(b []byte) (n int, err error) {
 	n = copy(b, r.s)
-	err = io.EOF //All is read, so signal it with EOF flag.
+	r.s = r.s[n:]
+	if len(r.s) == 0 {
+		err = io.EOF
+	}
 	return
 }
 
