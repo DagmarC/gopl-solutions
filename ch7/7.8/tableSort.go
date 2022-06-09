@@ -1,65 +1,34 @@
 package main
 
-import (
-	"reflect"
-	"strings"
-	"time"
-)
-
-//!+7.7 recentlyClickedSort
-type recentlyClickedSort struct {
-	t      []*Track
-	recent []string
+type byColumns struct {
+	t    []*Track
+	less []less
 }
 
-func (ts recentlyClickedSort) Len() int      { return len(ts.t) }
-func (ts recentlyClickedSort) Swap(i, j int) { ts.t[i], ts.t[j] = ts.t[j], ts.t[i] }
+type less func(x, y *Track) bool
 
-func (ts recentlyClickedSort) Less(i, j int) bool {
+func byTitleCol(x, y *Track) bool  { return x.Title < y.Title }
+func byArtistCol(x, y *Track) bool { return x.Artist < y.Artist }
+func byAlbumCol(x, y *Track) bool  { return x.Album < y.Album }
+func byYearCol(x, y *Track) bool   { return x.Year < y.Year }
+func byLengthCol(x, y *Track) bool { return int64(x.Length) < int64(y.Length) }
 
-	if ts.recent == nil || len(ts.recent) == 0 {
-		return ts.t[i].Artist < ts.t[j].Artist // Default, none was recently clicked
-	}
-	for _, r := range ts.recent {
-		if strings.ToLower(r) == "year" {
-			t1 := getFieldInteger(ts.t[i], r)
-			t2 := getFieldInteger(ts.t[j], r)
-			if t1 != t2 {
-				return t1 < t2
-			}
-		} else if strings.ToLower(r) == "length" {
-			t1 := getFieldDuration(ts.t[i], r)
-			t2 := getFieldDuration(ts.t[j], r)
-			if t1 != t2 {
-				return t1 < t2
-			}
-		} else {
-			t1 := getFieldString(ts.t[i], r)
-			t2 := getFieldString(ts.t[j], r)
-			if t1 != t2 {
-				return t1 < t2
-			}
+func (x byColumns) Len() int { return len(x.t) }
+func (x byColumns) Less(i, j int) bool {
+	t1, t2 := x.t[i], x.t[j]
+	for _, lt := range x.less {
+		if !lt(t1, t2) && !lt(t2, t1) { // So they are equal
+			continue
 		}
+		return lt(t1, t2)
 	}
-	return false
+	return byArtistCol(t1, t2) // default sort, if all are equal
 }
+func (x byColumns) Swap(i, j int) { x.t[i], x.t[j] = x.t[j], x.t[i] }
 
-func getFieldString(t *Track, field string) string {
-	r := reflect.ValueOf(t)
-	f := reflect.Indirect(r).FieldByName(field)
-	return f.String()
+func sortByColumns(t []*Track, cols ...less) byColumns {
+	return byColumns{
+		t:    t,
+		less: cols,
+	}
 }
-
-func getFieldInteger(t *Track, field string) int {
-	r := reflect.ValueOf(t)
-	f := reflect.Indirect(r).FieldByName(field)
-	return int(f.Int())
-}
-
-func getFieldDuration(t *Track, field string) time.Duration {
-	r := reflect.ValueOf(t)
-	f := reflect.Indirect(r).FieldByName(field)
-	return time.Duration(f.Int())
-}
-
-//!-7.7 recentlyClickedSort

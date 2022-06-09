@@ -90,7 +90,9 @@ func main() {
 	// }})
 
 	// sort.Sort(byRecentTableSort{tracks, []string{"Title", "Year"}})
-	sort.Sort(recentlyClickedSort{tracks, []string{"Length", "Artist"}})
+	// sort.Sort(recentlyClickedSort{tracks, []string{"Length", "Artist"}})
+	// SECOND SOLUTION
+	sort.Sort(sortByColumns(tracks, byLengthCol, byYearCol))
 
 	printTracks(tracks)
 }
