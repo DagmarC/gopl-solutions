@@ -99,7 +99,6 @@ func addRecentCols(cols []string) {
 		case "yearCol":
 			recentCols.Add(ti.ByYearCol)
 		case "lengthCol":
-
 			recentCols.Add(ti.ByLengthCol)
 		}
 	}
