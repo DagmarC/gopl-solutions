@@ -19,12 +19,10 @@ func main() {
 }
 
 func isPalindrome(s sort.Interface) bool {
-	var i int
-	for j := s.Len() - 1; j > s.Len()/2; j-- {
+	for j, i := s.Len() - 1, 0; j > s.Len()/2; j,i = j-1, i+1 {
 		if s.Less(i, j) || s.Less(j, i) {
 			return false
 		}
-		i++
 	}
 	return true
 }
