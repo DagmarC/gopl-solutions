@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+
+	"github.com/DagmarC/gopl-solutions/ch7/7.12/template"
 )
 
 var mu sync.Mutex
@@ -16,9 +18,7 @@ func (d dollars) String() string { return fmt.Sprintf("$%.2f", d) }
 type Database map[string]dollars
 
 func (db Database) List(w http.ResponseWriter, req *http.Request) {
-	for item, price := range db {
-		fmt.Fprintf(w, "%s: %s\n", item, price)
-	}
+	template.ItemsList.Execute(w, db)
 }
 
 func (db Database) Price(w http.ResponseWriter, req *http.Request) {
