@@ -25,7 +25,6 @@ func main() {
 	http.HandleFunc("/delete", db.Delete)
 	http.HandleFunc("/update", db.Update)
 
-
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
