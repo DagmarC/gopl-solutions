@@ -68,3 +68,17 @@ func (c call) Eval(env Env) float64 {
 }
 
 //!-Eval2
+
+//!+7.14 min
+func (m minimum) Eval(env Env) float64 {
+	min := math.Inf(1)
+
+	for _, op := range m.operands {
+		cur := op.Eval(env)
+		if min > cur {
+			min = cur
+		}
+	}
+	return min
+}
+//!-7.14 min

@@ -37,3 +37,21 @@ func (c call) String() string {
 
 	return buf.String()
 }
+
+//!+7.14 min
+func (m minimum) String() string {
+	var buf bytes.Buffer
+
+	buf.Write([]byte("min"))
+	buf.Write([]byte("("))
+	for i, arg := range m.operands {
+		if i > 0 {
+			buf.Write([]byte(", "))
+		}
+		buf.Write([]byte(arg.String()))
+	}
+	buf.Write([]byte(")"))
+
+	return buf.String()
+}
+//!-7.14 min

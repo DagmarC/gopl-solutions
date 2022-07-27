@@ -56,3 +56,18 @@ func (c call) Check(vars map[Var]bool) error {
 var numParams = map[string]int{"pow": 2, "sin": 1, "sqrt": 1}
 
 //!-Check
+
+//!+7.14 min
+func (m minimum) Check(vars map[Var]bool) error {
+	if len(m.operands) == 0 {
+		return fmt.Errorf("minumum has empty list")
+	}
+	for _, op := range m.operands {
+		if err := op.Check(vars); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//!-7.14 min

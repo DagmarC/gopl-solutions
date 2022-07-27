@@ -40,3 +40,10 @@ type call struct {
 }
 
 //!-ast
+
+//!+7.14 min
+type minimum struct {
+	operands []Expr
+}
+
+//!-7.14 min

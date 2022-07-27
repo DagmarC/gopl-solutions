@@ -135,6 +135,10 @@ func parsePrimary(lex *lexer) Expr {
 			}
 		}
 		lex.next() // consume ')'
+		
+		if id == "min" {
+			return minimum{args}
+		}
 		return call{id, args}
 
 	case scanner.Int, scanner.Float:
