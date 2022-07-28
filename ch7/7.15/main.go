@@ -13,5 +13,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Given expression: %s. \t Result: %g\n", expr.String(), expr.Eval(env))
+	fmt.Printf("Given expression: %s \t Result: %g\n", expr.String(), expr.Eval(env))
 }

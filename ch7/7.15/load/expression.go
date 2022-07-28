@@ -17,7 +17,7 @@ func LoadExpresion(r io.Reader) (eval.Expr, eval.Env, error) {
 
 	fmt.Println("Enter the expression eg. x-1 or min(1, x, 2, 3), ... :")
 	scanner.Scan()
-	inputExpr := scanner.Text()
+	inputExpr := strings.TrimSpace(scanner.Text())
 
 	fmt.Println("Enter all given ENV VARS eg. x=1 in fact variable=number. To stop type DONE anycase:")
 	fmt.Println("Note: If you dont enter the env var, it will have the default value 0. To stop type DONE anycase:")
@@ -27,7 +27,7 @@ func LoadExpresion(r io.Reader) (eval.Expr, eval.Env, error) {
 		if strings.EqualFold(strings.ToUpper(vars), "DONE") {
 			break
 		}
-		err := parseEnvVars(inputExpr, scanner.Text(), env)
+		err := parseEnvVars(inputExpr, strings.TrimSpace(scanner.Text()), env)
 		if err != nil {
 			return nil, env, err
 		}
