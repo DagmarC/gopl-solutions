@@ -10,38 +10,45 @@ import (
 	"github.com/DagmarC/gopl-solutions/ch7/7.13/eval"
 )
 
-func LoadExpresion(r io.Reader) (eval.Expr, eval.Env, error) {
+func LoadExpresion(r io.Reader) (eval.Expr, error) {
 
 	scanner := bufio.NewScanner(r)
-	env := make(eval.Env, 0)
 
 	fmt.Println("Enter the expression eg. x-1 or min(1, x, 2, 3), ... :")
 	scanner.Scan()
 	inputExpr := strings.TrimSpace(scanner.Text())
 
-	fmt.Println("Enter all given ENV VARS eg. x=1 in fact variable=number. To stop type DONE anycase:")
-	fmt.Println("Note: If you dont enter the env var, it will have the default value 0. To stop type DONE anycase:")
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	e, err := eval.Parse(inputExpr)
+	if err != nil {
+		return nil, err
+	}
 
-	for scanner.Scan() {
-		vars := scanner.Text()
-		if strings.EqualFold(strings.ToUpper(vars), "DONE") {
-			break
-		}
-		err := parseEnvVars(inputExpr, strings.TrimSpace(scanner.Text()), env)
+	return e, nil
+}
+
+func LoadEnvVars(r io.Reader, exp string) (eval.Env, error) {
+	scanner := bufio.NewScanner(r)
+	env := make(eval.Env, 0)
+	fmt.Println("Enter all given ENV VARS: variable=number.")
+	fmt.Println("Multiple CSV format: x=1,y=2,z=3,...")
+
+	scanner.Scan()
+	vars := scanner.Text()
+
+	for _, v := range strings.Split(vars, ",") {
+		err := parseEnvVars(exp, strings.TrimSpace(v), env)
 		if err != nil {
-			return nil, env, err
+			return env, err
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, env, err
+		return nil, err
 	}
-	e, err := eval.Parse(inputExpr)
-	if err != nil {
-		return nil, env, err
-	}
-
-	return e, env, nil
+	return env, nil
 }
 
 func parseEnvVars(e string, input string, env eval.Env) error {

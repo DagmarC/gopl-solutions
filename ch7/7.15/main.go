@@ -9,7 +9,11 @@ import (
 )
 
 func main() {
-	expr, env, err := load.LoadExpresion(os.Stdin)
+	expr, err := load.LoadExpresion(os.Stdin)
+	if err != nil {
+		log.Fatal(err)
+	}
+	env, err := load.LoadEnvVars(os.Stdin, expr.String())
 	if err != nil {
 		log.Fatal(err)
 	}
