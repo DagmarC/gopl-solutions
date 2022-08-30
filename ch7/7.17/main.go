@@ -5,16 +5,47 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	myxml "github.com/DagmarC/gopl-solutions/ch7/7.17/xml"
 )
 
+// func main() {
+// 	attMatchers := []string{"id", "class"}
+// 	dec := xml.NewDecoder(os.Stdin)
+// 	var stack []string // stack of element names
+
+// 	for {
+// 		tok, err := dec.Token()
+// 		if err == io.EOF {
+// 			break
+// 		} else if err != nil {
+// 			fmt.Fprintf(os.Stderr, "xmlselect: %v\n", err)
+// 			os.Exit(1)
+// 		}
+// 		switch tok := tok.(type) {
+// 		case xml.StartElement:
+// 			stack = append(stack, tok.Name.Local) // push
+// 		case xml.EndElement:
+// 			stack = stack[:len(stack)-1] // pop
+
+// 		case xml.CharData:
+// 			if myxml.ContainsAll(stack, os.Args[1:]) {
+// 				if myxml.ContainsAll(stack, os.Args[1:]) {
+// 					// for _, s := range stack {
+// 					// 	if !strings.Contains(s, "=") {
+// 					// 		fmt.Printf("%s ", s)
+// 					// 	}
+// 					// }
+// 					fmt.Printf(" %s\n", tok)
+// 				}
+// 			}
+// 		}
+// 	}
+// }
+
 func main() {
 	dec := xml.NewDecoder(os.Stdin)
-	var stack []string // stack of element names
-	var elCount int
-	attMatchers := []string{"id", "class", "name"}
+	var stack []xml.StartElement // stack of element names
 
 	for {
 		tok, err := dec.Token()
@@ -26,28 +57,18 @@ func main() {
 		}
 		switch tok := tok.(type) {
 		case xml.StartElement:
-			stack = append(stack, tok.Name.Local) // push
-			elCount++                             // count elements and attributes pushed to stack
-
-			// append to stack attributes: class=X or id=Y
-			for _, att := range tok.Attr {
-				for _, m := range attMatchers {
-					if att.Name.Local == m {
-						target := strings.Join([]string{att.Name.Local, att.Value}, "=")
-						stack = append(stack, target)
-						elCount++
-					}
-				}
-
-			}
+			stack = append(stack, tok) // push
+			
 		case xml.EndElement:
-			for elCount > 0 { // Pop elements + attributes
-				stack = stack[:len(stack)-1] // pop
-				elCount--
-			}
+			stack = stack[:len(stack)-1] // pop
+
 		case xml.CharData:
+			// fmt.Printf("\t===== %s\n", tok)
 			if myxml.ContainsAll(stack, os.Args[1:]) {
-				fmt.Printf("%s: %s\n", strings.Join(stack, " "), tok)
+				for _, s := range stack {
+					fmt.Printf("%s ", s.Name.Local)
+				}
+				fmt.Printf(": \t\t\t\t%s\n", tok)
 			}
 		}
 	}
