@@ -58,9 +58,7 @@ func XmlTree(r io.Reader) Tree {
 
 		switch tok := tok.(type) {
 		case xml.StartElement:
-			var el Element
-			el.Attr = tok.Attr
-			el.Type = tok.Name
+			var el Element = Element{tok.Name, tok.Attr, nil}
 
 			stack = append(stack, &el) // push
 			if tree.root == nil {
@@ -78,7 +76,7 @@ func XmlTree(r io.Reader) Tree {
 			if len(stack) > 0 {
 				tailn = stack[len(stack)-1]
 			}
-		case xml.CharData:
+		case xml.CharData: // Char Data do not need to be appended to the stack, they have no children (I suppose)
 			switch tailn := tailn.(type) {
 			case *Element:
 				tailn.Children = append(tailn.Children, CharData(tok))
@@ -97,25 +95,17 @@ func traverseRec(n Node, depth int) {
 	if n == nil {
 		return
 	}
-
 	switch n := n.(type) {
 	case *Element:
-		tab(depth)
-		fmt.Printf("%s\t", n.Type.Local)
-
+		fmt.Printf("%*s%s\t", depth*4, "", n.Type.Local)
 		for _, nn := range n.Children {
 			traverseRec(nn, depth+1)
 		}
 	case CharData:
 		if strings.TrimSpace(string(n)) != "" {
-			fmt.Printf(": %s", n)
+			fmt.Printf(": %q", n)
+		} else {
+			fmt.Println()
 		}
-		fmt.Println()
-	}
-}
-func tab(d int) {
-	for d > 0 {
-		fmt.Printf("\t")
-		d--
 	}
 }
