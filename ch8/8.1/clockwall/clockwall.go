@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -11,45 +11,65 @@ import (
 	"sync"
 )
 
+type server struct {
+	address, port, tz string
+}
+
 // RUN: ./clockwall NewYork=localhost:8010 Tokyo=localhost:8020
-// while this is runnning: TZ=US/Eastern ./clockclient -port 8010 & TZ=Asia/Tokyo ./clockclient -port 8020
+// while this is runnning: TZ=US/Eastern ./clock -port 8010 & TZ=Asia/Tokyo ./clock -port 8020
 func main() {
+
 	var wg sync.WaitGroup
 
+	servers := make([]*server, 0, len(os.Args))
 	for _, arg := range os.Args[1:] {
-		tz, addressP, err := parseTzPort(arg)
+		server, err := parseServer(arg)
 		if err != nil {
 			log.Fatal(err)
 		}
+		servers = append(servers, &server)
+	}
+	// Clockwall header
+	fmt.Printf("Timezone\tAdress:Port\t\tTime\n")
+	for _, s := range servers {
 		wg.Add(1)
-		go getTime(tz, addressP, wg)
+		go clientTCP(s, &wg)
 	}
 	wg.Wait()
 }
 
-func getTime(tz string, addressP string, wg sync.WaitGroup) {
-	conn, err := net.Dial("tcp", addressP)
+func clientTCP(server *server, wg *sync.WaitGroup) {
+
+	conn, err := net.Dial("tcp", server.address+":"+server.port)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
-
-	fmt.Println("TIMEZONE: ", tz)
-	mustCopy(os.Stdout, conn)
-	mustCopy(conn, os.Stdin)
-	wg.Done()
+	connbuf := bufio.NewReader(conn)
+	for {
+		str, err := connbuf.ReadString('\n')
+		if err != nil {
+			break
+		}
+		fmt.Printf("%-6s\t\t%6s:%-4s\t\t%9s", server.tz, server.address, server.port, str)
+	}
 }
 
-func parseTzPort(arg string) (string, string, error) {
+func parseServer(arg string) (server, error) {
 	res := strings.Split(arg, "=")
 	if len(res) != 2 {
-		return "", "", errors.New("invalid arg, expected 1 equals sign '=' in format tz=address:port")
+		return server{}, errors.New("invalid arg, expected 1 equals sign '=' in format tz=address:port")
 	}
-	return res[0], res[1], nil
+	addr, prt, err := parseAddrPrt(res[1])
+	if err != nil {
+		return server{}, err
+	}
+	return server{tz: res[0], address: addr, port: prt}, nil
 }
 
-func mustCopy(dst io.Writer, src io.Reader) {
-	if _, err := io.Copy(dst, src); err != nil {
-		log.Fatal(err)
+func parseAddrPrt(s string) (string, string, error) {
+	res := strings.Split(s, ":")
+	if len(res) != 2 {
+		return "", "", errors.New("invalid arg, expected 1 equals sign ':' in format address:port")
 	}
+	return res[0], res[1], nil
 }
