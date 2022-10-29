@@ -49,7 +49,6 @@ func main() {
 	for c := 0; c < height; c++ {
 		<-done
 	} // Receive all done signals from height number of goroutines.
-
 	fmt.Printf("elapsed %fms\n", time.Since(start).Seconds()*1000)
 	png.Encode(out, img) // NOTE: ignoring errors
 }
