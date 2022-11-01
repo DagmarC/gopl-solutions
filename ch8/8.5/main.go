@@ -18,15 +18,19 @@ import (
 	"github.com/DagmarC/gopl-solutions/utils"
 )
 
+const (
+	xmin, ymin, xmax, ymax = -2, -2, +2, +2
+	width, height          = 1024, 1024
+)
+
 func main() {
-	const (
-		xmin, ymin, xmax, ymax = -2, -2, +2, +2
-		width, height          = 1024, 1024
-	)
 
 	out := utils.GetFile("mandelbrot.png")
 	defer out.Close()
+	png.Encode(out, buildMandelbrot()) // NOTE: ignoring errors
+}
 
+func buildMandelbrot() *image.RGBA {
 	// Buffer: Height number of goroutines will be executed.
 	done := make(chan struct{}, height)
 
@@ -50,7 +54,7 @@ func main() {
 		<-done
 	} // Receive all done signals from height number of goroutines.
 	fmt.Printf("elapsed %fms\n", time.Since(start).Seconds()*1000)
-	png.Encode(out, img) // NOTE: ignoring errors
+	return img
 }
 
 func mandelbrot(z complex128) color.Color {
