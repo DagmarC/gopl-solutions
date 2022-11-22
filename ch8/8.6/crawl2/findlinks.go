@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/DagmarC/gopl-solutions/utils/links"
+	"github.com/DagmarC/gopl-solutions/utils/html"
 )
 
 //!+semaphore
@@ -34,7 +34,7 @@ func crawl(node URLnode, maxDepth int) []URLnode {
 	}
 
 	tokens <- struct{}{} // acquire a token
-	list, err := links.Extract(node.url)
+	list, err := html.Extract(node.url)
 	<-tokens // release the token
 
 	if err != nil {
