@@ -45,7 +45,7 @@ var tokens = make(chan struct{}, 20)
 
 func crawl(node URLnode, maxDepth int, done chan struct{}) []URLnode {
 	if cancelled(done) {
-		return []URLnode{}
+		return []URLnode{} // if done chan is closed, call the utility fn in GOR as soon as possible to return 
 	}
 
 	if maxDepth == 0 {
