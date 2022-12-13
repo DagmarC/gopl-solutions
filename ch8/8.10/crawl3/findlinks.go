@@ -17,6 +17,25 @@ import (
 	"github.com/DagmarC/gopl-solutions/ch8/8.10/links"
 )
 
+// CANCEL EVENT STEPS:
+// 1. Utility function cancelled
+// 2. done channel and close done channel in its own GOR (eg os.Stdin event listener and closer then)
+// 3. make other GORS to respond to steps above (VIA select case <-done event OR cancelled() function)
+// 4. To make sure (testing purposes) that all gors has finished, you can call panic
+//    at the place of returning after done is closed to see the stacktrace
+//    NOTE: panic: Help .. goroutine 1 [running]: main.main()
+
+// cancelled is the Utility function that checks or polls the cancellation state
+// at the instant it is called
+func cancelled(done chan struct{}) bool {
+	select {
+	case <-done:
+		return true
+	default:
+		return false
+	}
+}
+
 //!+semaphore
 // tokens is a counting semaphore used to
 // enforce a limit of 20 concurrent requests.
@@ -25,6 +44,10 @@ var tokens = make(chan struct{}, 20)
 // crawl the URL nodes reachable by at most maxDepth links, node.d represents the current depth node, if maxDepth=0 -> no link printed
 
 func crawl(node URLnode, maxDepth int, done chan struct{}) []URLnode {
+	if cancelled(done) {
+		return []URLnode{}
+	}
+
 	if maxDepth == 0 {
 		return []URLnode{} // no depth --> no URL to return
 	}
@@ -39,7 +62,11 @@ func crawl(node URLnode, maxDepth int, done chan struct{}) []URLnode {
 
 	if err != nil {
 		log.Printf("CUSTOM ERROR: Node %s, Depth %d, %v", node.url, node.d, err)
-		close(done) //  Via closing done channel - Broadcast to receivers, that sending will not occur.
+		go func() {
+			if !cancelled(done) {
+				close(done) //  Via closing done channel - Broadcast to receivers, that sending will not occur.
+			}
+		}()
 		return []URLnode{}
 	}
 
@@ -76,7 +103,7 @@ func main() {
 
 	done := make(chan struct{}) // Signal the cancellation
 	nodesChan := make(chan []URLnode)
-	
+
 	var n int // number of pending sends to worklist
 	var listNodes []URLnode
 
@@ -100,22 +127,23 @@ func main() {
 
 		select {
 		case listNodes = <-nodesChan: // Receiving
-		case <-done:
-			fmt.Println("Done channel closed.")
-			return
-		}
-
-		for _, node := range listNodes {
-			if !seen[node.url] {
-				seen[node.url] = true
-				n++
-				go func(node URLnode) {
-					nodesChan <- crawl(node, *depthPtr, done) // Sending side, if crawl ends with error, done signal will be received.
-				}(node)
+			for _, node := range listNodes {
+				if !seen[node.url] {
+					seen[node.url] = true
+					n++
+					go func(node URLnode) {
+						nodesChan <- crawl(node, *depthPtr, done) // Sending side, if crawl ends with error, done signal will be received.
+					}(node)
+				}
 			}
+		case <-done:
+			fmt.Println("Done channel closed..")
+			return
+
 		}
 
 	}
+	// panic("Help") // Debugging stacktrace for how many goroutines are running = only one main should be running
 }
 
 //!-
