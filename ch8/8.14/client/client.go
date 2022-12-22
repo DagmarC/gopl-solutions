@@ -19,7 +19,7 @@ type Client struct {
 }
 
 func NewClient(conn *net.Conn) (*Client, error) {
-	ch := make(chan string) // outgoing client messages
+	ch := make(chan string, 30) // 8.15 bufferred, outgoing client messages
 	addr := (*conn).RemoteAddr().String()
 	timer := time.NewTimer(time.Duration(MAX_CLIENT_RESPONSE) * time.Second) // See https://gobyexample.com/timers
 
