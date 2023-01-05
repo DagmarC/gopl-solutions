@@ -58,12 +58,6 @@ type M interface {
 	Get(key string, done chan struct{}, i int) (interface{}, error)
 }
 
-/*
-//!+seq
-	m := memo.New(httpGetBody)
-//!-seq
-*/
-
 func Sequential(t *testing.T, m M) {
 	//!+seq
 	for url := range incomingURLs() {
@@ -78,12 +72,6 @@ func Sequential(t *testing.T, m M) {
 	}
 	//!-seq
 }
-
-/*
-//!+conc
-	m := memo.New(httpGetBody)
-//!-conc
-*/
 
 func Concurrent(t *testing.T, m M) {
 	//!+conc
@@ -107,24 +95,58 @@ func Concurrent(t *testing.T, m M) {
 	//!-conc
 }
 
-func ConcurrentClose1(t *testing.T, m M) {
+////////////
+func SequentialClose(t *testing.T, m M) {
+	//!+seq
+	var wg sync.WaitGroup // Wait for closing all done channel, to prevent gor leak
+
+	var i int // request number being processed
+
+	for url := range incomingURLs() {
+
+		// Testing purposes: closes done channel, either it will close when the request is being processed - request will be cancelled or after - which changes nothing
+		done := make(chan struct{}, 1)
+		wg.Add(1)
+		go func() {
+			rand.Seed(time.Now().UnixNano())
+			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond)
+			close(done)
+			wg.Done()
+		}()
+
+		start := time.Now()
+		value, err := m.Get(url, done, i)
+		if err != nil {
+			log.Print(err)
+			i++ // increment the request number even if the error has occured
+			continue
+		}
+		fmt.Printf("========%s number %d, %s, %d bytes=========\n",
+			url, i, time.Since(start), len(value.([]byte)))
+		fmt.Println()
+		i++
+	}
+	wg.Wait() // Wait until all done channels are closed.
+	//!-seq
+}
+
+func ConcurrentClose(t *testing.T, m M) {
 	//!+conc
-	var n sync.WaitGroup
+	var wq sync.WaitGroup
 	var i int
 	for url := range incomingURLs() {
-		n.Add(1)
+		wq.Add(2) // 1 gor for url and 1 gor for closing done channel
 		go func(url string, i int) {
-			done := make(chan struct{}, 1)
+			defer wq.Done()
 
+			done := make(chan struct{}, 1)
 			go func(url string, i int) {
 				rand.Seed(time.Now().UnixNano())
-				time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond)
-				// fmt.Printf("INFO: Closing done channel %s number %d.\n", url, i)
+				time.Sleep(time.Duration(rand.Intn(3000)) * time.Millisecond)
 				close(done)
+				defer wq.Done()
 			}(url, i)
 
-			// defer close(done)
-			defer n.Done()
 			start := time.Now()
 			value, err := m.Get(url, done, i)
 			if err != nil {
@@ -136,34 +158,6 @@ func ConcurrentClose1(t *testing.T, m M) {
 		}(url, i)
 		i++
 	}
-	n.Wait()
+	wq.Wait()
 	//!-conc
-}
-
-func SequentialClose(t *testing.T, m M) {
-	//!+seq
-	var i int
-	for url := range incomingURLs() {
-		start := time.Now()
-		done := make(chan struct{}, 1)
-
-		go func() {
-			rand.Seed(time.Now().UnixNano())
-			time.Sleep(time.Duration(rand.Intn(500)) * time.Millisecond)
-			// fmt.Println("\n----INFO: Closing done channel.")
-			close(done)
-		}()
-
-		value, err := m.Get(url, done, i)
-		if err != nil {
-			log.Print(err)
-			i++
-			continue
-		}
-		fmt.Printf("\n========%s number %d, %s, %d bytes=========\n",
-			url, i, time.Since(start), len(value.([]byte)))
-
-		i++
-	}
-	//!-seq
 }
