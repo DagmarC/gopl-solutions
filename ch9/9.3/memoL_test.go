@@ -6,7 +6,7 @@ package memo_test
 import (
 	"testing"
 
-	"github.com/DagmarC/gopl-solutions/ch9/9.3"
+	memo "github.com/DagmarC/gopl-solutions/ch9/9.3"
 	"github.com/DagmarC/gopl-solutions/ch9/9.3/memotest"
 )
 
@@ -22,12 +22,12 @@ func TestConcurrent(t *testing.T) {
 	memotest.Concurrent(t, m)
 }
 
-func TestCConcClose1(t *testing.T) {
-	m := memo.New(httpGetBody)
-	memotest.ConcurrentClose1(t, m) // closes done channel after some sleep
+func TestConcurrentCloseL(t *testing.T) {
+	m := memo.New(httpGetBody) // mutex lock version
+	memotest.ConcurrentClose(t, m) // closes done channel after some sleep
 }
 
-func TestSequentialClose(t *testing.T) {
-	m := memo.New(httpGetBody)
+func TestSequentialCloseL(t *testing.T) {
+	m := memo.New(httpGetBody) // mutex lock version
 	memotest.SequentialClose(t, m) // closes done channel after some sleep
 }
