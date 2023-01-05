@@ -15,6 +15,8 @@ import (
 	"path/filepath"
 
 	"github.com/DagmarC/gopl-solutions/utils"
+
+	"github.com/DagmarC/gopl-solutions/utils/html"
 )
 
 func breadthFirst(f func(item, host string) []string, worklist []string, host string) {
@@ -35,7 +37,7 @@ func breadthFirst(f func(item, host string) []string, worklist []string, host st
 
 func crawl(path, host string) []string {
 
-	url, err := utils.GetURL(path)
+	url, err := html.GetURL(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,5 +92,5 @@ func getFileDirPath(url *url.URL, host string) (string, string) {
 func main() {
 	// Crawl the web breadth-first,
 	// starting from the command-line arguments.
-	breadthFirst(crawl, os.Args[1:], utils.GetHost(os.Args[1]))
+	breadthFirst(crawl, os.Args[1:], html.GetHost(os.Args[1]))
 }
