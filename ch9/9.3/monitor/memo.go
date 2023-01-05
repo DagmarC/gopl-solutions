@@ -90,7 +90,7 @@ outer:
 			go e.call(f, req.key) // call f(key)
 		}
 		go e.deliver(req, deleteKey)
-		<-removeKey(deleteKey, cache) // either deleteS is recieved and key is removed or just continue
+		<-removeKey(deleteKey, cache) // blocked until removeKey has decided whether to remove key from cache or just continue normally
 	}
 
 }
