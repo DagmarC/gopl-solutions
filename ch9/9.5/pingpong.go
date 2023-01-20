@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 	"time"
 )
 
 func main() {
 	var wg sync.WaitGroup
+	runtime.GOMAXPROCS(4) // Ex 9.6 - measure how it affecct the program and what is the optimal
 
 	timer := time.NewTimer(time.Second) // max comunications in 1 second
 
@@ -20,8 +22,13 @@ func main() {
 	outer:
 		for {
 			select {
+			case <-done:
+			default:
+			}
+
+			select {
 			case pin := <-ping:
-				fmt.Println("PING REC: ", pin)
+				// fmt.Println("PING REC: ", pin)
 				pong <- pin + 1
 			case <-done:
 				fmt.Println("Closing Pong... ")
@@ -36,13 +43,16 @@ outer:
 	for {
 		select {
 		case pon := <-pong:
-			fmt.Println("PONG REC: ", pon)
+			// fmt.Println("PONG REC: ", pon)
 			ping <- pon + 1 // answer
 		case <-timer.C:
-			<-pong      // release pong recievement
 			close(done) // send signal to goroutine
+			time.Sleep(1000 * time.Millisecond) // Give a time to recieve done signal
+			for p := range pong {
+				fmt.Println("LAST PONGs releasment: ", p) // release pong recievement
+			}
+			fmt.Println("Closing Ping... ")
 			close(ping)
-			fmt.Println("Closing ping... ")
 			break outer
 		}
 	}
