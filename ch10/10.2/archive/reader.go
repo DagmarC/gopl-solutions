@@ -2,6 +2,7 @@ package archive
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 )
@@ -25,16 +26,18 @@ func RegisterFormat(name string, readFn func(string) error) {
 	formatsMu.Unlock()
 }
 
-func ArchiveReader(name string) error {
-	p := strings.LastIndexAny(name, ".")
+func ArchiveReader(fname string) error {
+	p := strings.LastIndexAny(fname, ".")
 	if p == -1 {
 		return errors.New("invalid file")
 	}
-	suffix := name[p+1:]
+	fmt.Println("REGISTERED FORMATS: ", formats)
 
+	suffix := fname[p+1:]
 	for _, frmt := range formats {
 		if suffix == frmt.name {
-			return frmt.readFn(frmt.name)
+			fmt.Println("Suffix: ", suffix)
+			return frmt.readFn(fname)
 		}
 	}
 	return ErrFormat // format not found

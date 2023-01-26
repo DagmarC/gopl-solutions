@@ -14,7 +14,6 @@ func init() {
 }
 
 func ReadZip(f string) error {
-
 	zf, err := zip.OpenReader(f)
 	if err != nil {
 		return err
