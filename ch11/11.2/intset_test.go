@@ -66,3 +66,26 @@ func TestUnionWith(t *testing.T) {
 		}
 	}
 }
+
+func benchmark(b *testing.B, num int) {
+	var x IntSet
+	for i := 0; i < 1000; i++ {
+		x.Add(num)
+	}
+}
+
+func BenchmarkAdd100(b *testing.B) {
+	benchmark(b, 100)
+}
+
+func BenchmarkAdd10000(b *testing.B) {
+	benchmark(b, 10000)
+}
+
+func BenchmarkAdd1000000(b *testing.B) {
+	benchmark(b, 1000000)
+}
+
+func BenchmarkAdd100000000(b *testing.B) {
+	benchmark(b, 100000000)
+}
